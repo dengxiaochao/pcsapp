@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party', 'pcssdk'))
@@ -6,7 +7,19 @@ from apiauth import apiauth
 from config import config
 from sync import sync
 
+def setup_logging():
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.INFO)
+    fileHandler = logging.FileHandler("sync.log")
+    fileHandler.setFormatter(formatter)
+    rootLogger.addHandler(fileHandler)
+    consoleHandler = logging.StreamHandler(sys.stdout)
+    consoleHandler.setFormatter(formatter)
+    rootLogger.addHandler(consoleHandler)
+
 if __name__ == '__main__':
+    setup_logging()
     conf = config.Config("pcs.yml")
     pprint(vars(conf))
 
@@ -21,7 +34,8 @@ if __name__ == '__main__':
         auth.setup_access_token(code)
     print("success. got access_token:", auth.get_access_token())
 
+    logging.getLogger().info("start sync...")
     for s in conf.sync:
-        s = sync.Sync(s.local, s.remote, auth)
+        s = sync.Sync(s.local, s.remote, auth, type=s.type, excludes=s.excludes, blocksize=20*1024*1024)
         s.sync()
 

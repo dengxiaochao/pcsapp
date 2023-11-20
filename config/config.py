@@ -1,3 +1,4 @@
+from enum import Enum
 import yaml
 
 def check_field(conf:dict[str, str], key:str):
@@ -12,10 +13,22 @@ class PCSConfig(object):
         self.secret = check_field(conf, 'secret')
         self.endpoint = check_field(conf, 'endpoint')
 
+
+class SyncType(Enum):
+    DOWNLOAD = 'download'
+    UPLOAD = 'upload'
+    UPDOWNLOAD = 'updownload'
+
 class SyncDir(object):
+    local: str
+    remote: str
+    type: SyncType
+    excludes: list[str]
     def __init__(self, conf: dict[str, str]):
         self.local = check_field(conf, 'local_dir')
         self.remote = check_field(conf, 'remote_dir')
+        self.type = SyncType(conf.get('type', 'download'))
+        self.excludes = conf.get('excludes', [])
 
 class Config(object):
     def __init__(self, config_file):

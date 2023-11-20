@@ -1,7 +1,0 @@
-pcs:
-  key: key
-  secret: secret
-  endpoint: https://openapi.baidu.com/oauth/2.0/
-sync:
-  - remote_dir: /云端资源/sync
-    local_dir: /mnt/disk0/download
