@@ -13,6 +13,7 @@ from config.config import SyncType
 from third_party.pcssdk.openapi_client import api_client, exceptions
 from third_party.pcssdk.openapi_client.api import fileupload_api, fileinfo_api, multimediafile_api
 
+BLOCKSIZE=4*104*1024
 
 class NameBytesIO(BytesIO):
     def __init__(self, file: str, block: bytes):
@@ -26,7 +27,7 @@ class SyncException(Exception):
 
 
 class Sync(object):
-    def __init__(self, local: str, remote: str, auth: apiauth.Auth, type=SyncType.DOWNLOAD, excludes: List[str] = [], blocksize=4*1024*1024):
+    def __init__(self, local: str, remote: str, auth: apiauth.Auth, type=SyncType.DOWNLOAD, excludes: List[str] = [], blocksize=BLOCKSIZE):
         self.local = local
         self.remote = remote
         self.type = type
@@ -186,10 +187,12 @@ class Sync(object):
             req = requests.get(f'{dlink}&access_token={token}', headers={
                                "User-Agent": "pan.baidu.com"}, stream=True)
             req.raise_for_status()
-            with open(dst, 'wb') as f:
-                for chunk in req.iter_content(chunk_size=8192):
+            tmp = dst + '.tmp'
+            with open(tmp, 'wb') as f:
+                for chunk in req.iter_content(chunk_size=BLOCKSIZE):
                     if chunk:
                         f.write(chunk)
+            os.rename(tmp, dst)
             req.close()
         except exceptions.ApiException as e:
             raise SyncException(
