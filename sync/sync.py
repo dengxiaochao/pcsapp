@@ -184,10 +184,12 @@ class Sync(object):
                     f"xpanmultimediafileget {fsid} error: {api_response}")
             logging.info(f"download {fsid} to {dst}")
             req = requests.get(f'{dlink}&access_token={token}', headers={
-                               "User-Agent": "pan.baidu.com"})
+                               "User-Agent": "pan.baidu.com"}, stream=True)
             req.raise_for_status()
             with open(dst, 'wb') as f:
-                f.write(req.content)
+                for chunk in req.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
             req.close()
         except exceptions.ApiException as e:
             raise SyncException(
